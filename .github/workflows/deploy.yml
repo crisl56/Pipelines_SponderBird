@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.set-artifact-name.outputs.name }}
-          path: Builds/WebGL/WebGL
+          path: builds/WebGL/WebGL
           retention-days: 7
 
   deploy:
@@ -85,7 +85,7 @@ jobs:
 
       - name: Deploy to Github Pages
         id: deploy
-        uses: actions/deploy-paages@v4
+        uses: actions/deploy-pages@v4
 
       - name: Print deploy URL
         run: |
