@@ -40,6 +40,7 @@ var FirebaseBridgeLib = {
             console.log("Listener Registered. Waiting auth from portal.")
         }
 
+        // unity scene reload info
         if (window.__fbAuth && window.__fbAuth.uid && window.__fbAuth.idToken) {
             var payload = JSON.stringify(window.__fbAuth);
             SendMessage("FirebaseManager", "OnAuthReceived", payload);
@@ -48,8 +49,8 @@ var FirebaseBridgeLib = {
     },
 
     SubmitScoreToFireStore: function (jsonBodyPtr) {
-        var josnBody = UTF8ToString(jsonBodyPtr);
-        var parsed = JSON.pase(jsonBody);
+        var jsonBody = UTF8ToString(jsonBodyPtr);
+        var parsed = JSON.parse(jsonBody);
 
         var auth = window.__fbAuth;
         if (!auth || !auth.idToken || !auth.projectId) {
