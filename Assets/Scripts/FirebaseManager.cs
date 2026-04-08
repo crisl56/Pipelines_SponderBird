@@ -67,7 +67,6 @@ public class FirebaseManager : MonoBehaviour
     }
 
     // NOTE: this is only used inside firebasemanager so it doesn't matter if its inside 
-    [System.Serializable]
     private class AuthPayload
     {
         public string uid;
@@ -76,7 +75,6 @@ public class FirebaseManager : MonoBehaviour
         public string projectId;
     }
 
-    [System.Serializable]
     private class ScorePayload
     {
         public int score;
