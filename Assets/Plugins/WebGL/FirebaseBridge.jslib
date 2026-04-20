@@ -17,7 +17,7 @@ var FirebaseBridgeLib = {
             // first arg - find that object
             // second arg - function to call on that object
             // last arg - payload stuff
-            SendMessage("FirebaseManager", "OnAuthReceived", payload);
+            SendMessage("GameManager", "OnAuthReceived", payload);
 
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({ type: "firebase-auth-ack" }, "*");
@@ -58,7 +58,7 @@ var FirebaseBridgeLib = {
             return;
         }
 
-        var baseUrl = "https://firestore.googleapis.com/v1/projects" + auth.projectId + "/databases/(default)/documents";
+        var baseUrl = "https://firestore.googleapis.com/v1/projects/" + auth.projectId + "/databases/(default)/documents";
 
         var headers = {
             "Content-Type": "application/json",
