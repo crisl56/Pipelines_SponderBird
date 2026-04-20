@@ -15,7 +15,7 @@ public class FirebaseManager : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")] private static extern void InitFirebaseBridge();
     [DllImport("__Internal")] private static extern void SubmitScoreToFirestore(string jsonBody);
-# else
+#else
     private static void InitFirebaseBridge()
         => Debug.Log("InitFirebaseBridge Stub");
     

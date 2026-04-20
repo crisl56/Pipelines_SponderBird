@@ -7,8 +7,8 @@ var FirebaseBridgeLib = {
 
         function handleAuth(data) {
             window.__fbAuth.uid = data.uid;
-            window.__fbAuth.idToken = data.idToken;
             window.__fbAuth.displayName = data.displayName || "Player";
+            window.__fbAuth.idToken = data.idToken;
             window.__fbAuth.projectId = data.projectId = data.projectId || "";
 
             var payload = JSON.stringify(window.__fbAuth);
@@ -48,7 +48,7 @@ var FirebaseBridgeLib = {
 
     },
 
-    SubmitScoreToFireStore: function (jsonBodyPtr) {
+    SubmitScoreToFirestore: function (jsonBodyPtr) {
         var jsonBody = UTF8ToString(jsonBodyPtr);
         var parsed = JSON.parse(jsonBody);
 

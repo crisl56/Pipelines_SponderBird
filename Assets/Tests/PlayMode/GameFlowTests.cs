@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System.Collections;
 using UnityEngine.TestTools;
 
+#if UNITY_EDITOR
 // this is really count as an integration test
 // this is meant to replicate things like getting score, dying, starting a game properly
 // not as a way of trying to replicate a player playing the game.
@@ -159,3 +160,4 @@ public class GameFlowTests
         field?.SetValue(gm, state);
     }
 }
+#endif
