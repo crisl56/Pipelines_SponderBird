@@ -123,7 +123,7 @@ public class FirebaseManagerTests
     [Test]
     public void SubmitScore_WhenNotAuthenticated_DoesNotThrow()
     {
-        Assert.DoesNotThrow(() => firebaseManager.SubmitScore(10, 10, 30));
+        Assert.DoesNotThrow(() => firebaseManager.SubmitScore(10, 10, 30, 40, 41));
     }
     
     [Test]
@@ -131,7 +131,7 @@ public class FirebaseManagerTests
     {
         string json = BuildAuthJson("1234", "token+1234", "Sponder", "Beetle-ball");
         firebaseManager.OnAuthReceived(json);
-        Assert.DoesNotThrow(() => firebaseManager.SubmitScore(10, 10, 30));
+        Assert.DoesNotThrow(() => firebaseManager.SubmitScore(10, 10, 30, 40, 41));
     }
 
     [Test]
