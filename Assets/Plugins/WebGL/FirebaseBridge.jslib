@@ -126,37 +126,83 @@ var FirebaseBridgeLib = {
 mergeInto(LibraryManager.library, {
 
     InitFirebaseBridge: function () {
-        console.log("FirebaseBridge initialized");
-        window._firebaseUID = null;
-        window._firebaseIdToken = null;
+        if (!window.__fbAuth) {
+            window.__fbAuth = { uid: null, idToken: null, displayName: null, projectId: null };
+        }
+
+        function handleAuth(data) {
+            window.__fbAuth.uid = data.uid;
+            window.__fbAuth.displayName = data.displayName || "Player";
+            window.__fbAuth.idToken = data.idToken;
+            window.__fbAuth.projectId = data.projectId || "";
+
+            var payload = JSON.stringify(window.__fbAuth);
+            SendMessage("FirebaseManager", "OnAuthReceived", payload);
+
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: "firebase-auth-ack" }, "*");
+                console.log("Sent ack to portal");
+            }
+        }
+
+        if (!window.__firebaseBridgeInit) {
+            window.__firebaseBridgeInit = true;
+
+            window.addEventListener("message", function (event) {
+                var data = event.data;
+                if (!data || data.type !== "firebase-auth") return;
+                handleAuth(data);
+            });
+
+            console.log("Listener registered. Waiting for auth from portal.");
+        }
+
+        if (window.__fbAuth && window.__fbAuth.uid && window.__fbAuth.idToken) {
+            SendMessage("FirebaseManager", "OnAuthReceived", JSON.stringify(window.__fbAuth));
+        }
     },
 
     StoreAuthToken: function (uidPtr, tokenPtr) {
-        window._firebaseUID = UTF8ToString(uidPtr);
-        window._firebaseIdToken = UTF8ToString(tokenPtr);
-        console.log("Auth token stored for UID:", window._firebaseUID);
+        console.log("StoreAuthToken called, uid:", UTF8ToString(uidPtr));
     },
 
-    SubmitScoreToFirestore: function (jsonPtr) {
-        var json = UTF8ToString(jsonPtr);
-        var data = JSON.parse(json);
+    SubmitScoreToFirestore: function (jsonBodyPtr) {
+        var parsed = JSON.parse(UTF8ToString(jsonBodyPtr));
+        var auth = window.__fbAuth;
 
-        var uid = window._firebaseUID;
-        var token = window._firebaseIdToken;
-        var projectId = window._firebaseProjectId; // set this in InitFirebaseBridge if needed
-
-        if (!uid || !token) {
-            console.warn("SubmitScoreToFirestore: No auth token stored, aborting.");
+        if (!auth || !auth.uid || !auth.idToken) {
+            console.warn("SubmitScoreToFirestore: Not authenticated, aborting.");
             return;
         }
 
-        var url = "https://firestore.googleapis.com/v1/projects/" + projectId + 
-                  "/databases/(default)/documents/users/" + uid;
+        var headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + auth.idToken
+        };
 
-        // Read current doc first so we can increment totals
-        fetch(url, {
-            headers: { "Authorization": "Bearer " + token }
+        var baseUrl = "https://firestore.googleapis.com/v1/projects/" + auth.projectId + "/databases/(default)/documents";
+        var userDocUrl = baseUrl + "/users/" + auth.uid;
+
+        // POST to scores collection
+        fetch(baseUrl + "/scores", {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify({
+                fields: {
+                    userId:    { stringValue: auth.uid },
+                    score:     { integerValue: String(parsed.score) },
+                    pipes:     { integerValue: String(parsed.pipes) },
+                    duration:  { integerValue: String(parsed.duration) },
+                    timestamp: { timestampValue: new Date().toISOString() }
+                }
+            })
         })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { console.log("Score saved:", d.name); })
+        .catch(function(e) { console.error("Score POST failed:", e); });
+
+        // GET then PATCH user doc
+        fetch(userDocUrl, { headers: headers })
         .then(function(r) { return r.json(); })
         .then(function(doc) {
             var fields = doc.fields || {};
@@ -164,43 +210,30 @@ mergeInto(LibraryManager.library, {
                 return fields[f] ? parseInt(fields[f].integerValue || 0) : 0;
             };
 
-            var oldHigh    = get("highScore");
-            var oldGames   = get("gamesPlayed");
-            var oldTotal   = get("totalScore");
-            var oldJumps   = get("totalJumps");
-            var oldClicks  = get("totalClicks");
-            var oldPipes   = get("totalPipes");
-
             var body = {
                 fields: {
-                    highScore:   { integerValue: String(Math.max(oldHigh, data.score)) },
-                    gamesPlayed: { integerValue: String(oldGames + 1) },
-                    totalScore:  { integerValue: String(oldTotal + data.score) },
-                    totalJumps:  { integerValue: String(oldJumps + data.jumps) },
-                    totalClicks: { integerValue: String(oldClicks + data.clicks) },
-                    totalPipes:  { integerValue: String(oldPipes + data.pipes) },
+                    highScore:   { integerValue: String(Math.max(get("highScore"), parsed.score)) },
+                    gamesPlayed: { integerValue: String(get("gamesPlayed") + 1) },
+                    totalScore:  { integerValue: String(get("totalScore")  + parsed.score) },
+                    totalJumps:  { integerValue: String(get("totalJumps")  + parsed.jumps) },
+                    totalClicks: { integerValue: String(get("totalClicks") + parsed.clicks) },
+                    totalPipes:  { integerValue: String(get("totalPipes")  + parsed.pipes) },
                 }
             };
 
-            var updateMask = Object.keys(body.fields)
+            var mask = Object.keys(body.fields)
                 .map(function(k) { return "updateMask.fieldPaths=" + k; })
                 .join("&");
 
-            return fetch(url + "?" + updateMask, {
+            return fetch(userDocUrl + "?" + mask, {
                 method: "PATCH",
-                headers: {
-                    "Authorization": "Bearer " + token,
-                    "Content-Type": "application/json"
-                },
+                headers: headers,
                 body: JSON.stringify(body)
             });
         })
         .then(function(r) { return r.json(); })
-        .then(function(result) {
-            console.log("Score submitted to Firestore:", result);
-        })
-        .catch(function(err) {
-            console.error("Firestore submit failed:", err);
-        });
+        .then(function(d) { console.log("User profile updated:", d.name); })
+        .catch(function(e) { console.error("User PATCH failed:", e); });
     }
+
 });
