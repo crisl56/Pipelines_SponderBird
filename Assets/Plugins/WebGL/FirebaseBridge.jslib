@@ -189,11 +189,15 @@ mergeInto(LibraryManager.library, {
             headers: headers,
             body: JSON.stringify({
                 fields: {
-                    userId:    { stringValue: auth.uid },
-                    score:     { integerValue: String(parsed.score) },
-                    pipes:     { integerValue: String(parsed.pipes) },
-                    duration:  { integerValue: String(parsed.duration) },
-                    timestamp: { timestampValue: new Date().toISOString() }
+                    userId:      { stringValue: auth.uid },
+                    playerName:  { stringValue: auth.displayName || "Player" },
+                    playerPhoto: { nullValue: null },
+                    score:       { integerValue: String(parsed.score) },
+                    pipes:       { integerValue: String(parsed.pipes) },
+                    jumps:       { integerValue: String(parsed.jumps) },
+                    duration:    { integerValue: String(parsed.duration) },
+                    timestamp:   { timestampValue: new Date().toISOString() },
+                    isMock:      { booleanValue: false }
                 }
             })
         })
