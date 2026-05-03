@@ -58,6 +58,8 @@ public class BirdController : MonoBehaviour
     {
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(Vector2.up * flapForce, ForceMode2D.Impulse);
+
+        PlayerStatsTracker.instance.AddJump();
     }
 
     private void UpdateRotation()

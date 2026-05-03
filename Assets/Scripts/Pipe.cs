@@ -9,7 +9,7 @@ public class Pipe : MonoBehaviour
     [Header("Gap Settings")]
     [Tooltip("Half the height of the gap between top and bottom pipes")]
     [SerializeField] private float gapHalfHeight = 1.8f;
-
+     
     [Header("References")]
     [SerializeField] private Transform topPipe;
     [SerializeField] private Transform bottomPipe;

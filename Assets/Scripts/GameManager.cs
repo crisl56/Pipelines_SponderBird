@@ -49,6 +49,7 @@ public class GameManager : MonoBehaviour
             if (anyInput)
             {
                 StartGame();
+
             }
         }
     }
@@ -74,6 +75,8 @@ public class GameManager : MonoBehaviour
 
         if (bird != null) bird.Activate();
         if (pipeSpawner != null) pipeSpawner.SetSpawning(true);
+
+        PlayerStatsTracker.instance.StartPlayerTime();
     }
 
     public void OnBirdDied()
@@ -83,6 +86,8 @@ public class GameManager : MonoBehaviour
 
         if (pipeSpawner != null) pipeSpawner.SetSpawning(false);
         if (ScoreManager.Instance != null) ScoreManager.Instance.SaveHighScore();
+
+        PlayerStatsTracker.instance.EndPlayerTime();
 
         Invoke(nameof(ShowGameOver), 0.6f);
     }

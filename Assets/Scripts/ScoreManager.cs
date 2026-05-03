@@ -36,6 +36,8 @@ public class ScoreManager : MonoBehaviour
 
         pipesPassed = 0;
         sessionStartTime = Time.time;
+
+        PlayerStatsTracker.instance.ResetStats();
         
         UpdateScoreDisplay();
     }
@@ -65,7 +67,12 @@ public class ScoreManager : MonoBehaviour
         if (FirebaseManager.Instance != null)
         {
             int duration = Mathf.RoundToInt(Time.time - sessionStartTime);
-            FirebaseManager.Instance.SubmitScore(currentScore, pipesPassed, duration);
+
+            // Pull from tracker
+            int jumps = PlayerStatsTracker.instance?.PlayerJumps ?? 0;
+            int clicks = PlayerStatsTracker.instance?.PlayerClicks ?? 0;
+
+            FirebaseManager.Instance.SubmitScore(currentScore, pipesPassed, duration, jumps, clicks);
         }
     }
 

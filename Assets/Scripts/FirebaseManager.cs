@@ -15,12 +15,16 @@ public class FirebaseManager : MonoBehaviour
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")] private static extern void InitFirebaseBridge();
     [DllImport("__Internal")] private static extern void SubmitScoreToFirestore(string jsonBody);
+    [DllImport("__Internal")] private static extern void StoreAuthToken(string uid, string idToken);
 #else
     private static void InitFirebaseBridge()
         => Debug.Log("InitFirebaseBridge Stub");
     
     private static void SubmitScoreToFirestore(string jsonBody)
         => Debug.Log("SubmitScoreToFirestore Stub");
+
+    private static void StoreAuthToken(string uid, string idToken)
+        => Debug.Log("StoreAtuhToken Stub");
 #endif
     
     private void Awake()
@@ -49,11 +53,13 @@ public class FirebaseManager : MonoBehaviour
         DisplayName = data.displayName;
         ProjectId = data.projectId;
         IsAuthenticated = !string.IsNullOrEmpty(UserId) && !string.IsNullOrEmpty(IdToken);
-        
+
+        StoreAuthToken(UserId, IdToken);
+
         Debug.Log($"User authenticated as {DisplayName}, UID: {UserId}");
     }
 
-    public void SubmitScore(int score, int pipes, int duration)
+    public void SubmitScore(int score, int pipes, int duration, int jumps, int clicks)
     {
         if (!IsAuthenticated)
         {
@@ -65,7 +71,9 @@ public class FirebaseManager : MonoBehaviour
         {
             score =  score,
             pipes =  pipes,
-            duration = duration
+            duration = duration,
+            jumps = jumps,   
+            clicks = clicks  
         };
         
         string json = JsonUtility.ToJson(payload);
@@ -88,6 +96,8 @@ public class FirebaseManager : MonoBehaviour
         public int score;
         public int pipes;
         public int duration;
+        public int jumps;
+        public int clicks;
     }
 }
 
